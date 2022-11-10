@@ -4,6 +4,9 @@ on:
   pull_request:
     types: [opened, synchronize]
 
+env:
+  SOURCEFIELD_LICENSE_KEY: ${{ secrets.SOURCEFIELD_LICENSE_KEY }}
+
 jobs:
   initialComment:
     name: Post initial PR Comment (calculating...)
@@ -116,7 +119,7 @@ jobs:
     name: Parse TypeScript and JavaScript Maps
     runs-on: ubuntu-latest
     container:
-      image: "us-docker.pkg.dev/plumbr/sourcefield-public/sourcefield-lsif-typescript:e9245ff"
+      image: "us-docker.pkg.dev/plumbr/sourcefield-public/sourcefield-lsif-typescript:d8ea8cb"
     needs:
       - fetchLanguages
       - getMergeBase
@@ -194,7 +197,7 @@ jobs:
     name: Parse Go Maps
     runs-on: ubuntu-latest
     container:
-      image: "us-docker.pkg.dev/plumbr/sourcefield-public/sourcefield-lsif-go:9a3d4b0"
+      image: "us-docker.pkg.dev/plumbr/sourcefield-public/sourcefield-lsif-go:6bd6e8a"
     needs:
       - fetchLanguages
       - getMergeBase
@@ -230,7 +233,7 @@ jobs:
     name: Process and Diff Maps (Python)
     runs-on: ubuntu-latest
     container:
-      image: "us-docker.pkg.dev/plumbr/sourcefield-public/parse-processor/lsif-processor:8162c90"
+      image: "us-docker.pkg.dev/plumbr/sourcefield-public/parse-processor/lsif-processor:9ea20f2"
     needs:
       - fetchLanguages
       - getMergeBase
@@ -242,9 +245,8 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
       - name: Set ownership
-        run: |
-          # see https://github.com/actions/runner/issues/2033
-          chown -R $(id -u):$(id -g) $PWD
+        # see https://github.com/actions/runner/issues/2033
+        run: chown -R $(id -u):$(id -g) $PWD
       - name: Download base map
         uses: actions/download-artifact@v3
         with:
@@ -281,19 +283,18 @@ jobs:
         run: |
           cd /sourcefield
           python3 -m processor.mapdiff.commands - diff_maps_and_report_metrics \
-          --repo_owner="${{ github.event.pull_request.base.repo.owner.login }}" \
-          --repo_name="${{ github.event.pull_request.base.repo.name }}" \
-          --pr_number=${{ github.event.pull_request.number }} \
+          --language="PYTHON" \
           --map1=/sourcefield/base.pickle \
           --map2=/sourcefield/head.pickle \
           --diff=/sourcefield/diff.txt \
+          --pr_event="${GITHUB_EVENT_PATH}" \
           --backend_url="https://cartographr-api.sourcefield.io/dev-hwkns-plumbr/graphql"
 
   processMapsTypeScript:
     name: Process and Diff Maps (TypeScript and JavaScript)
     runs-on: ubuntu-latest
     container:
-      image: "us-docker.pkg.dev/plumbr/sourcefield-public/parse-processor/lsif-processor:8162c90"
+      image: "us-docker.pkg.dev/plumbr/sourcefield-public/parse-processor/lsif-processor:9ea20f2"
     needs:
       - fetchLanguages
       - getMergeBase
@@ -305,9 +306,8 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
       - name: Set ownership
-        run: |
-          # see https://github.com/actions/runner/issues/2033
-          chown -R $(id -u):$(id -g) $PWD
+        # see https://github.com/actions/runner/issues/2033
+        run: chown -R $(id -u):$(id -g) $PWD
       - name: Download base map
         uses: actions/download-artifact@v3
         with:
@@ -344,19 +344,18 @@ jobs:
         run: |
           cd /sourcefield
           python3 -m processor.mapdiff.commands - diff_maps_and_report_metrics \
-          --repo_owner="${{ github.event.pull_request.base.repo.owner.login }}" \
-          --repo_name="${{ github.event.pull_request.base.repo.name }}" \
-          --pr_number=${{ github.event.pull_request.number }} \
+          --language="TS_JS" \
           --map1=/sourcefield/base.pickle \
           --map2=/sourcefield/head.pickle \
           --diff=/sourcefield/diff.txt \
+          --pr_event="${GITHUB_EVENT_PATH}" \
           --backend_url="https://cartographr-api.sourcefield.io/dev-hwkns-plumbr/graphql"
 
   processMapsJava:
     name: Process and Diff Maps (Java)
     runs-on: ubuntu-latest
     container:
-      image: "us-docker.pkg.dev/plumbr/sourcefield-public/parse-processor/lsif-processor:8162c90"
+      image: "us-docker.pkg.dev/plumbr/sourcefield-public/parse-processor/lsif-processor:9ea20f2"
     needs:
       - fetchLanguages
       - getMergeBase
@@ -368,9 +367,8 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
       - name: Set ownership
-        run: |
-          # see https://github.com/actions/runner/issues/2033
-          chown -R $(id -u):$(id -g) $PWD
+        # see https://github.com/actions/runner/issues/2033
+        run: chown -R $(id -u):$(id -g) $PWD
       - name: Download base map
         uses: actions/download-artifact@v3
         with:
@@ -407,19 +405,18 @@ jobs:
         run: |
           cd /sourcefield
           python3 -m processor.mapdiff.commands - diff_maps_and_report_metrics \
-          --repo_owner="${{ github.event.pull_request.base.repo.owner.login }}" \
-          --repo_name="${{ github.event.pull_request.base.repo.name }}" \
-          --pr_number=${{ github.event.pull_request.number }} \
+          --language="JAVA" \
           --map1=/sourcefield/base.pickle \
           --map2=/sourcefield/head.pickle \
           --diff=/sourcefield/diff.txt \
+          --pr_event="${GITHUB_EVENT_PATH}" \
           --backend_url="https://cartographr-api.sourcefield.io/dev-hwkns-plumbr/graphql"
 
   processMapsGo:
     name: Process and Diff Maps (Go)
     runs-on: ubuntu-latest
     container:
-      image: "us-docker.pkg.dev/plumbr/sourcefield-public/parse-processor/lsif-processor:8162c90"
+      image: "us-docker.pkg.dev/plumbr/sourcefield-public/parse-processor/lsif-processor:9ea20f2"
     needs:
       - fetchLanguages
       - getMergeBase
@@ -431,9 +428,8 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
       - name: Set ownership
-        run: |
-          # see https://github.com/actions/runner/issues/2033
-          chown -R $(id -u):$(id -g) $PWD
+        # see https://github.com/actions/runner/issues/2033
+        run: chown -R $(id -u):$(id -g) $PWD
       - name: Download base map
         uses: actions/download-artifact@v3
         with:
@@ -470,10 +466,32 @@ jobs:
         run: |
           cd /sourcefield
           python3 -m processor.mapdiff.commands - diff_maps_and_report_metrics \
-          --repo_owner="${{ github.event.pull_request.base.repo.owner.login }}" \
-          --repo_name="${{ github.event.pull_request.base.repo.name }}" \
-          --pr_number=${{ github.event.pull_request.number }} \
+          --language="GO" \
           --map1=/sourcefield/base.pickle \
           --map2=/sourcefield/head.pickle \
           --diff=/sourcefield/diff.txt \
+          --pr_event="${GITHUB_EVENT_PATH}" \
+          --backend_url="https://cartographr-api.sourcefield.io/dev-hwkns-plumbr/graphql"
+
+  finalize:
+    name: Finalize metrics
+    runs-on: ubuntu-latest
+    container:
+      image: "us-docker.pkg.dev/plumbr/sourcefield-public/parse-processor/lsif-processor:9ea20f2"
+    needs:
+      - fetchLanguages
+      - getMergeBase
+      - processMapsPython
+      - processMapsTypeScript
+      - processMapsJava
+      - processMapsGo
+    if: ${{ always() }}
+    steps:
+      - name: Create score card
+        run: |
+          cd /sourcefield
+          python3 -m processor.mapdiff.commands - create_score_card \
+          --pr_event="${GITHUB_EVENT_PATH}" \
+          --merge_base_sha=${{ needs.getMergeBase.outputs.merge_base }} \
+          --head_sha=${{ github.event.pull_request.head.sha }} \
           --backend_url="https://cartographr-api.sourcefield.io/dev-hwkns-plumbr/graphql"
